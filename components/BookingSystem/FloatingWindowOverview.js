@@ -72,13 +72,16 @@ const FloatingWindow = ({
     if (codeFromServer.data !== undefined) {
       const discount = codeFromServer.data.discount;
       setDiscountPrice((selectedServicesPrice * discount) / 100);
+      const updatedValue = selectedServicesPrice - discountPrice;
       setSteps({
         ...steps,
         step7: {
           ...steps.step7,
           couponCode,
+          value: updatedValue,
         },
       });
+
       setCouponCode("");
     } else {
       if (!toast.isActive(formToast.current.coupon)) {
@@ -90,48 +93,48 @@ const FloatingWindow = ({
   };
 
   useEffect(() => {
-    const element = document.getElementById("smsConfirm");
-    element.setAttribute("checked", true);
+    // const element = document.getElementById("smsConfirm");
+    // element.setAttribute("checked", true);
     setSteps({
       ...steps,
       step7: {
         ...steps.step7,
         value: parseFloat(selectedServicesPrice),
-        sendEmailAndSms: true,
+        sendEmailAndSms: false,
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleSend = () => {
-    const element = document.getElementById("smsConfirm");
-    if (element.checked) {
-      element.setAttribute("checked", true);
-      setSteps({
-        ...steps,
-        step7: {
-          ...steps.step7,
-          sendEmailAndSms: true,
-        },
-      });
-    } else {
-      element.removeAttribute("checked");
-      setSteps({
-        ...steps,
-        step7: {
-          ...steps.step7,
-          sendEmailAndSms: false,
-        },
-      });
-    }
-    // e.target.checked = ! e.target.checked;
-    // if (e.checked) {
+  // const toggleSend = () => {
+  //   const element = document.getElementById("smsConfirm");
+  //   if (element.checked) {
+  //     element.setAttribute("checked", true);
+  //     setSteps({
+  //       ...steps,
+  //       step7: {
+  //         ...steps.step7,
+  //         sendEmailAndSms: true,
+  //       },
+  //     });
+  //   } else {
+  //     element.removeAttribute("checked");
+  //     setSteps({
+  //       ...steps,
+  //       step7: {
+  //         ...steps.step7,
+  //         sendEmailAndSms: false,
+  //       },
+  //     });
+  //   }
+  //   // e.target.checked = ! e.target.checked;
+  //   // if (e.checked) {
 
-    // }
-    // else {
+  //   // }
+  //   // else {
 
-    // }
-  };
+  //   // }
+  // };
 
   return (
     <div className="floating-window">
@@ -207,12 +210,22 @@ const FloatingWindow = ({
               <th scope="row">{makePrice(selectedServicesPrice)}</th>
             </tr>
             {discountPrice !== 0 && (
-              <tr>
-                <th scope="row" colSpan="3">
-                  {state.text.bookingDiscountPrice}
-                </th>
-                <th scope="row">s{makePrice(discountPrice)}</th>
-              </tr>
+              <>
+                <tr>
+                  <th scope="row" colSpan="3">
+                    {state.text.bookingDiscountPrice}
+                  </th>
+                  <th scope="row">{makePrice(discountPrice)}</th>
+                </tr>
+                <tr>
+                  <th scope="row" colSpan="3">
+                    Final Price
+                  </th>
+                  <th scope="row">
+                    {makePrice(selectedServicesPrice - discountPrice)}
+                  </th>
+                </tr>
+              </>
             )}
           </tfoot>
         </table>
@@ -240,7 +253,7 @@ const FloatingWindow = ({
         )}
 
         <div className="d-flex justify-content-between mt-2">
-          <div className="d-flex align-items-center">
+          {/* <div className="d-flex align-items-center">
             <input
               onChange={(e) => toggleSend(e)}
               className="form-check-input"
@@ -250,7 +263,7 @@ const FloatingWindow = ({
             <label className="form-check-label mx-2" htmlFor="smsConfirm">
               Send Booking Confirmation SMS and Email
             </label>
-          </div>
+          </div> */}
 
           {/* <div className="d-flex align-items-center">
             <input className="form-check-input" type="checkbox" value="" id="emailConfirm" />

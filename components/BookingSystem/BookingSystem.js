@@ -1,72 +1,74 @@
 /* eslint-disable @next/next/no-img-element */
-import { useContext, useState, useEffect, Fragment } from 'react'
-import { useRouter } from 'next/router'
-import { GlobalContext } from '../contexts/GlobalContext'
-import FloatingWindow from './FloatingWindow'
-import FloatingWindowServices from './FloatingWindowServices'
-import FloatingWindowDate from './FloatingWindowDate'
-import FloatingWindowAuth from './FloatingWindowAuth'
-import FloatingWindowOverview from './FloatingWindowOverview'
-import FloatingWindowPayment from './FloatingWindowPayment'
-import setHours from "date-fns/setHours"
-import setMinutes from "date-fns/setMinutes"
-import setSeconds from "date-fns/setSeconds"
-import format from "date-fns/format"
+import { useContext, useState, useEffect, Fragment } from "react";
+import { useRouter } from "next/router";
+import { GlobalContext } from "../contexts/GlobalContext";
+import FloatingWindow from "./FloatingWindow";
+import FloatingWindowServices from "./FloatingWindowServices";
+import FloatingWindowDate from "./FloatingWindowDate";
+import FloatingWindowAuth from "./FloatingWindowAuth";
+import FloatingWindowOverview from "./FloatingWindowOverview";
+import FloatingWindowPayment from "./FloatingWindowPayment";
+import setHours from "date-fns/setHours";
+import setMinutes from "date-fns/setMinutes";
+import setSeconds from "date-fns/setSeconds";
+import format from "date-fns/format";
 
-import imageSchedule from '../../public/images/schedule.png'
+import imageSchedule from "../../public/images/schedule.png";
 
 const BookingSystem = () => {
-  const [state, setState] = useContext(GlobalContext)
+  const [state, setState] = useContext(GlobalContext);
   // const [show, setShow] = useState(false)
-  const [checked, setChecked] = useState(-1)
-  const [multiChecked, setMultiChecked] = useState([])
-  const [startDate, setStartDate] = useState(setHours(setMinutes(setSeconds(new Date(), 0), 0), 10))
-  const router = useRouter()
+  const [checked, setChecked] = useState(-1);
+  const [multiChecked, setMultiChecked] = useState([]);
+  const [startDate, setStartDate] = useState(
+    setHours(setMinutes(setSeconds(new Date(), 0), 0), 10)
+  );
+  const router = useRouter();
 
-  const show = state.showBooking
+  const show = state.showBooking;
 
   const setShow = (value) => {
     setState({
       ...state,
-      showBooking: value
-    })
-  }
+      showBooking: value,
+    });
+  };
   const initialState = {
-    "step1": {
+    step1: {
       id: 1,
       active: true,
       title: state.text.bookingStep1Title,
       multiSelect: false,
-      value: 0
+      value: 0,
     },
-    "step2": {
+    step2: {
       id: 2,
       active: false,
       title: state.text.bookingStep2Title,
-      value: 0
+      value: 0,
     },
-    "step3": {
+    step3: {
       id: 3,
       active: false,
       title: state.text.bookingStep3Title,
       multiSelect: true,
       serviceType: true,
-      value: []
+      value: [],
     },
-    "step4": {
+    step4: {
       id: 4,
       active: false,
       title: state.text.bookingStep4Title,
       multiSelect: false,
-      value: 0
+      value: 0,
     },
-    "step5": {
+    step5: {
       id: 5,
       active: false,
       title: state.text.bookingStep5Title,
-      value: ""
+      value: "",
     },
-    "step6": {
+    step6: {
       id: 6,
       active: false,
       title: state.text.bookingStep6Title,
@@ -75,10 +77,10 @@ const BookingSystem = () => {
         isGuest: false,
         name: "",
         email: "",
-        phone: ""
-      }
+        phone: "",
+      },
     },
-    "step7": {
+    step7: {
       id: 7,
       active: false,
       title: state.text.bookingStep7Title,
@@ -87,378 +89,466 @@ const BookingSystem = () => {
       booking: {},
       sendEmailAndSms: true,
     },
-    "step8": {
+    step8: {
       id: 8,
       active: false,
       title: state.text.bookingStep8Title,
       paymentIntent: "",
     },
-  }
-  const [steps, setSteps] = useState(initialState)
+  };
+  const [steps, setSteps] = useState(initialState);
   // Options
-  const options = state.options
-  const optionHairSize = options.find(option => option.name === "Hair Size").option
-  const optionHairType = options.find(option => option.name === "Hair Type").option
+  const options = state.options;
+  const optionHairSize = options.find(
+    (option) => option.name === "Hair Size"
+  ).option;
+  const optionHairType = options.find(
+    (option) => option.name === "Hair Type"
+  ).option;
 
   // Fetch Services
   const fetchServices = async (hairSize, hairType) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services?hair_size=${hairSize}&hair_type=${hairType}&limit=all`)
-      const data = await response.json()
-      return data
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/services?hair_size=${hairSize}&hair_type=${hairType}&limit=all`
+      );
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.log(error.message)
-      return null
+      console.log(error.message);
+      return null;
     }
-  }
+  };
 
   // Create Booking
-  const createBooking = async (date, charge, duration, customerId, stylistId, services, promocode = '', sendEmailAndSms) => {
+  const createBooking = async (
+    date,
+    charge,
+    duration,
+    customerId,
+    stylistId,
+    services,
+    promocode = "",
+    sendEmailAndSms = false
+  ) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.auth.token}`
-        },
-        body: JSON.stringify({
-          "booking_time": date,
-          "customer_id": customerId,
-          "server_id": stylistId,
-          charge,
-          duration,
-          services,
-          promocode,
-          sendEmailAndSms
-        })
-      })
-      const data = await response.json()
-      return data
+      const durationInt = parseInt(duration);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/bookings`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${state.auth.token}`,
+          },
+          body: JSON.stringify({
+            booking_time: date,
+            customer_id: customerId,
+            server_id: stylistId,
+            charge,
+            duration: durationInt,
+            services,
+            promocode,
+            sendEmailAndSms,
+          }),
+        }
+      );
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.log(error.message)
-      return null
+      console.log(error.message);
+      return null;
     }
-  }
+  };
 
   // Create Booking
-  const createGuestBooking = async (date, charge, duration, name, email, phone, stylistId, services, promocode = '', sendEmailAndSms) => {
+  const createGuestBooking = async (
+    date,
+    charge,
+    duration,
+    name,
+    email,
+    phone,
+    stylistId,
+    services,
+    promocode = "",
+    sendEmailAndSms
+  ) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/guest/bookings`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          "booking_time": date,
-          "server_id": stylistId,
-          charge,
-          duration,
-          services,
-          promocode,
-          name,
-          email,
-          phone,
-          sendEmailAndSms
-        })
-      })
-      const data = await response.json()
-      return data
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/guest/bookings`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            booking_time: date,
+            server_id: stylistId,
+            charge,
+            duration,
+            services,
+            promocode,
+            name,
+            email,
+            phone,
+            sendEmailAndSms,
+          }),
+        }
+      );
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.log(error.message)
-      return null
+      console.log(error.message);
+      return null;
     }
-  }
+  };
 
   // Get Text From Stream
   const getTextFromStream = async (readableStream) => {
-    let reader = readableStream.getReader()
-    let utf8Decoder = new TextDecoder()
-    let nextChunk
+    let reader = readableStream.getReader();
+    let utf8Decoder = new TextDecoder();
+    let nextChunk;
 
-    let resultStr = ''
+    let resultStr = "";
 
     while (!(nextChunk = await reader.read()).done) {
-      let partialData = nextChunk.value
-      resultStr += utf8Decoder.decode(partialData)
+      let partialData = nextChunk.value;
+      resultStr += utf8Decoder.decode(partialData);
     }
 
-    return resultStr
-  }
+    return resultStr;
+  };
 
   // Fetch Payment Intent
   const fetchPaymentIntent = async (bookingId, amount) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}/getPaymentIntent?amount=${amount}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}/getPaymentIntent?amount=${amount}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
-      })
-      const data = await getTextFromStream(response.body)
-      return data
+      );
+      const data = await getTextFromStream(response.body);
+      return data;
     } catch (error) {
-      console.log(error.message)
-      return null
+      console.log(error.message);
+      return null;
     }
-  }
+  };
 
   // Get Payment Intent From Server
   const getPaymentIntent = async (bookingId, amount, bookingResponse) => {
-    const paymentIntentFromServer = await fetchPaymentIntent(bookingId, amount)
+    const paymentIntentFromServer = await fetchPaymentIntent(bookingId, amount);
     // Set Payment Intent
-    if (typeof paymentIntentFromServer === 'string' && paymentIntentFromServer.startsWith('pi_')) {
+    if (
+      typeof paymentIntentFromServer === "string" &&
+      paymentIntentFromServer.startsWith("pi_")
+    ) {
       setSteps({
         ...steps,
-        "step7": { ...steps.step7, active: false, booking: bookingResponse },
-        "step8": { ...steps.step8, paymentIntent: paymentIntentFromServer, active: true }
-      })
+        step7: { ...steps.step7, active: false, booking: bookingResponse },
+        step8: {
+          ...steps.step8,
+          paymentIntent: paymentIntentFromServer,
+          active: true,
+        },
+      });
     } else {
-      console.log('Payment Intent Error')
+      console.log("Payment Intent Error");
     }
-  }
+  };
 
   // Next Functions
   const secondStep = async () => {
     if (checked) {
       setSteps({
         ...steps,
-        "step1": { ...steps.step1, active: false, value: checked },
-        "step2": { ...steps.step2, active: true },
-      })
+        step1: { ...steps.step1, active: false, value: checked },
+        step2: { ...steps.step2, active: true },
+      });
     } else {
       setSteps({
         ...steps,
-        "step1": { ...steps.step1, active: false, value: checked },
-        "step2": { ...steps.step2, value: -1 },
-        "step3": { ...steps.step3, active: true },
-      })
+        step1: { ...steps.step1, active: false, value: checked },
+        step2: { ...steps.step2, value: -1 },
+        step3: { ...steps.step3, active: true },
+      });
     }
-    setChecked(-1)
-  }
+    setChecked(-1);
+  };
   const thirdStep = () => {
     setSteps({
       ...steps,
-      "step2": { ...steps.step2, active: false, value: checked },
-      "step3": { ...steps.step3, active: true },
-    })
-    setChecked(-1)
-  }
+      step2: { ...steps.step2, active: false, value: checked },
+      step3: { ...steps.step3, active: true },
+    });
+    setChecked(-1);
+  };
   const fourthStep = () => {
     setSteps({
       ...steps,
-      "step3": { ...steps.step3, active: false, value: multiChecked },
-      "step4": { ...steps.step4, active: true },
-    })
-    setMultiChecked([])
-  }
+      step3: { ...steps.step3, active: false, value: multiChecked },
+      step4: { ...steps.step4, active: true },
+    });
+    setMultiChecked([]);
+  };
   const fifthStep = () => {
     setSteps({
       ...steps,
-      "step4": { ...steps.step4, active: false, value: checked },
-      "step5": { ...steps.step5, active: true },
-    })
-    setChecked(-1)
-  }
+      step4: { ...steps.step4, active: false, value: checked },
+      step5: { ...steps.step5, active: true },
+    });
+    setChecked(-1);
+  };
   const sixthStep = () => {
     if (state.auth.isLogin) {
       setSteps({
         ...steps,
-        "step5": { ...steps.step5, active: false, value: startDate },
-        "step6": { ...steps.step6, value: true },
-        "step7": { ...steps.step7, active: true },
-      })
+        step5: { ...steps.step5, active: false, value: startDate },
+        step6: { ...steps.step6, value: true },
+        step7: { ...steps.step7, active: true },
+      });
     } else {
       setSteps({
         ...steps,
-        "step5": { ...steps.step5, active: false, value: startDate },
-        "step6": { ...steps.step6, active: true },
-      })
+        step5: { ...steps.step5, active: false, value: startDate },
+        step6: { ...steps.step6, active: true },
+      });
     }
-    setStartDate(setHours(setMinutes(setSeconds(new Date(), 0), 0), 10))
-  }
+    setStartDate(setHours(setMinutes(setSeconds(new Date(), 0), 0), 10));
+  };
   const seventhStep = () => {
-
     setSteps({
       ...steps,
-      "step6": { ...steps.step6, active: false, value: true },
-      "step7": { ...steps.step7, active: true },
-    })
-  }
+      step6: { ...steps.step6, active: false, value: true },
+      step7: { ...steps.step7, active: true },
+    });
+  };
   const eighthStep = async (e) => {
-    e.preventDefault()
-    const date = format(steps.step5.value, "yyyy-MM-dd HH:mm")
-    const charge = steps.step7.value
-    const services = steps.step3.value
-    const duration = state.services.filter(({ id }) => services.includes(id)).map(services => services.duration).reduce((a, b) => a + b, 0)
-    const stylistId = steps.step4.value
-    const promocode = steps.step7.couponCode
+    e.preventDefault();
+    const date = format(steps.step5.value, "yyyy-MM-dd HH:mm");
+    const charge = steps.step7.value;
+    const services = steps.step3.value;
+    const duration = state.services
+      .filter(({ id }) => services.includes(id))
+      .map((services) => services.duration)
+      .reduce((a, b) => a + b, 0);
+    const stylistId = steps.step4.value;
+    const promocode = steps.step7.couponCode;
     const sendEmailAndSms = steps.step7.sendEmailAndSms;
     if (steps.step6.guest.isGuest) {
-      const name = steps.step6.guest.name
-      const email = steps.step6.guest.email
-      const phone = steps.step6.guest.phone
-      const guestBookingFromServer = await createGuestBooking(date, charge, duration, name, email, phone, stylistId, services, promocode, sendEmailAndSms)
+      const name = steps.step6.guest.name;
+      const email = steps.step6.guest.email;
+      const phone = steps.step6.guest.phone;
+      const guestBookingFromServer = await createGuestBooking(
+        date,
+        charge,
+        duration,
+        name,
+        email,
+        phone,
+        stylistId,
+        services,
+        promocode,
+        sendEmailAndSms
+      );
       if (guestBookingFromServer.id) {
-        const bookingId = guestBookingFromServer.id
-        const amount = guestBookingFromServer.charge
-        getPaymentIntent(bookingId, amount, guestBookingFromServer)
+        const bookingId = guestBookingFromServer.id;
+        const amount = guestBookingFromServer.charge;
+        getPaymentIntent(bookingId, amount, guestBookingFromServer);
       } else {
-        console.log('Guest Booking Error')
+        console.log("Guest Booking Error");
       }
     } else {
-      const customerId = state.auth.user.id
-      const bookingFromServer = await createBooking(date, charge, duration, customerId, stylistId, services, promocode, sendEmailAndSms)
+      const customerId = state.auth.user.id;
+      const bookingFromServer = await createBooking(
+        date,
+        charge,
+        duration,
+        customerId,
+        stylistId,
+        services,
+        promocode,
+        sendEmailAndSms
+      );
       if (bookingFromServer?.booking) {
-        const bookingId = bookingFromServer.booking.data.id
-        const amount = bookingFromServer.booking.data.charge
-        getPaymentIntent(bookingId, amount, bookingFromServer.booking.data)
+        const bookingId = bookingFromServer.booking.data.id;
+        const amount = bookingFromServer.booking.data.charge;
+        console.log(amount);
+        getPaymentIntent(bookingId, amount, bookingFromServer.booking.data);
       } else {
-        console.log('Booking Error')
+        console.log("Booking Error");
       }
     }
-
-  }
+  };
 
   const payLater = async (e) => {
     e.preventDefault();
 
-    const date = format(steps.step5.value, "yyyy-MM-dd HH:mm")
-    const charge = steps.step7.value
-    const services = steps.step3.value
-    const duration = state.services.filter(({ id }) => services.includes(id)).map(services => services.duration).reduce((a, b) => a + b, 0)
-    const stylistId = steps.step4.value
-    const promocode = steps.step7.couponCode
+    const date = format(steps.step5.value, "yyyy-MM-dd HH:mm");
+    const charge = steps.step7.value;
+    const services = steps.step3.value;
+    const duration = state.services
+      .filter(({ id }) => services.includes(id))
+      .map((services) => services.duration)
+      .reduce((a, b) => a + b, 0);
+    const stylistId = steps.step4.value;
+    const promocode = steps.step7.couponCode;
     const sendEmailAndSms = steps.step7.sendEmailAndSms;
     if (steps.step6.guest.isGuest) {
-      const name = steps.step6.guest.name
-      const email = steps.step6.guest.email
-      const phone = steps.step6.guest.phone
-      const guestBookingFromServer = await createGuestBooking(date, charge, duration, name, email, phone, stylistId, services, promocode, sendEmailAndSms)
+      const name = steps.step6.guest.name;
+      const email = steps.step6.guest.email;
+      const phone = steps.step6.guest.phone;
+      const guestBookingFromServer = await createGuestBooking(
+        date,
+        charge,
+        duration,
+        name,
+        email,
+        phone,
+        stylistId,
+        services,
+        promocode,
+        sendEmailAndSms
+      );
       if (guestBookingFromServer.id) {
-        if (state.locale == 'en') {
+        if (state.locale == "en") {
           window.location.href = "/en/checkout?payment=paylater";
-        }
-        else {
+        } else {
           window.location.href = "/checkout?payment=paylater";
         }
       } else {
-        console.log('Guest Booking Error')
+        console.log("Guest Booking Error");
       }
     } else {
-      const customerId = state.auth.user.id
-      const bookingFromServer = await createBooking(date, charge, duration, customerId, stylistId, services, promocode, sendEmailAndSms)
+      const customerId = state.auth.user.id;
+      const bookingFromServer = await createBooking(
+        date,
+        charge,
+        duration,
+        customerId,
+        stylistId,
+        services,
+        promocode,
+        sendEmailAndSms
+      );
+
       if (bookingFromServer?.booking) {
-        if (state.locale == 'en') {
+        if (state.locale == "en") {
           window.location.href = "/en/checkout?payment=paylater";
-        }
-        else {
+        } else {
           window.location.href = "/checkout?payment=paylater";
         }
       } else {
-        console.log('Booking Error')
+        console.log("Booking Error");
       }
     }
-  }
+  };
 
   const backToFirstStep = () => {
-    setChecked(-1)
+    setChecked(-1);
     setSteps({
       ...steps,
-      "step1": { ...steps.step1, active: true, value: 0 },
-      "step2": { ...steps.step2, active: false },
-    })
-  }
+      step1: { ...steps.step1, active: true, value: 0 },
+      step2: { ...steps.step2, active: false },
+    });
+  };
   const backToSecondStep = () => {
-    setMultiChecked([])
+    setMultiChecked([]);
     if (steps.step1.value === 0) {
       setSteps({
         ...steps,
-        "step1": { ...steps.step1, active: true, value: 0 },
-        "step3": { ...steps.step3, active: false },
-      })
+        step1: { ...steps.step1, active: true, value: 0 },
+        step3: { ...steps.step3, active: false },
+      });
     } else {
       setSteps({
         ...steps,
-        "step2": { ...steps.step2, active: true, value: 0 },
-        "step3": { ...steps.step3, active: false },
-      })
+        step2: { ...steps.step2, active: true, value: 0 },
+        step3: { ...steps.step3, active: false },
+      });
     }
-  }
+  };
   const backToThirdStep = () => {
-    setChecked(-1)
+    setChecked(-1);
     setSteps({
       ...steps,
-      "step3": { ...steps.step3, active: true, value: [] },
-      "step4": { ...steps.step4, active: false },
-    })
-  }
+      step3: { ...steps.step3, active: true, value: [] },
+      step4: { ...steps.step4, active: false },
+    });
+  };
   const backToFourthStep = () => {
-    setStartDate(setHours(setMinutes(setSeconds(new Date(), 0), 0), 10))
+    setStartDate(setHours(setMinutes(setSeconds(new Date(), 0), 0), 10));
     setSteps({
       ...steps,
-      "step4": { ...steps.step4, active: true, value: 0 },
-      "step5": { ...steps.step5, active: false },
-    })
-  }
+      step4: { ...steps.step4, active: true, value: 0 },
+      step5: { ...steps.step5, active: false },
+    });
+  };
   const backToFifthStep = () => {
     setSteps({
       ...steps,
-      "step5": { ...steps.step5, active: true, value: "" },
-      "step6": { ...steps.step6, active: false },
-    })
-  }
+      step5: { ...steps.step5, active: true, value: "" },
+      step6: { ...steps.step6, active: false },
+    });
+  };
 
   const backToDatePicker = () => {
     setSteps({
       ...steps,
-      "step5": { ...steps.step5, active: true, value: "" },
-      "step7": { ...steps.step7, active: false },
-    })
-  }
+      step5: { ...steps.step5, active: true, value: "" },
+      step7: { ...steps.step7, active: false },
+    });
+  };
 
   const setInitialState = () => {
-    setSteps(initialState)
-  }
+    setSteps(initialState);
+  };
 
   useEffect(() => {
     setSteps({
-      "step1": {
+      step1: {
         id: 1,
         active: true,
         title: state.text.bookingStep1Title,
         multiSelect: false,
-        value: 0
+        value: 0,
       },
-      "step2": {
+      step2: {
         id: 2,
         active: false,
         title: state.text.bookingStep2Title,
-        value: 0
+        value: 0,
       },
-      "step3": {
+      step3: {
         id: 3,
         active: false,
         title: state.text.bookingStep3Title,
         multiSelect: true,
         serviceType: true,
-        value: []
+        value: [],
       },
-      "step4": {
+      step4: {
         id: 4,
         active: false,
         title: state.text.bookingStep4Title,
         multiSelect: false,
-        value: 0
+        value: 0,
       },
-      "step5": {
+      step5: {
         id: 5,
         active: false,
         title: state.text.bookingStep5Title,
-        value: ""
+        value: "",
       },
-      "step6": {
+      step6: {
         id: 6,
         active: false,
         title: state.text.bookingStep6Title,
@@ -467,67 +557,160 @@ const BookingSystem = () => {
           isGuest: false,
           name: "",
           email: "",
-          phone: ""
-        }
+          phone: "",
+        },
       },
-      "step7": {
+      step7: {
         id: 7,
         active: false,
         title: state.text.bookingStep7Title,
         value: 0.0,
         couponCode: "",
-        booking: {}
+        booking: {},
       },
-      "step8": {
+      step8: {
         id: 8,
         active: false,
         title: state.text.bookingStep8Title,
         paymentIntent: state.paymentIntent,
       },
-    })
-  }, [state.text, router.pathname])
+    });
+  }, [state.text, router.pathname]);
 
   return (
     <div id="bookingSystem">
-
-      {!show ?
+      {!show ? (
         <Fragment>
-          <button className="btn-floating btn btn-lg btn-dark rounded-circle d-none d-lg-block" onClick={() => setShow(!show)}>
-            <img src={imageSchedule.src} alt="Booking System" className="booking-img" width="18px" height="18px" />
+          <button
+            className="btn-floating btn btn-lg btn-dark rounded-circle d-none d-lg-block"
+            onClick={() => setShow(!show)}
+          >
+            <img
+              src={imageSchedule.src}
+              alt="Booking System"
+              className="booking-img"
+              width="18px"
+              height="18px"
+            />
           </button>
-          <button className="btn-floating btn btn-lg btn-dark rounded-circle bookingFloatingButton d-lg-none" onClick={() => setShow(!show)}>
-            <img src={imageSchedule.src} alt="Booking System" className="booking-img bookingFloatingButton" width="18px" height="18px" />
+          <button
+            className="btn-floating btn btn-lg btn-dark rounded-circle bookingFloatingButton d-lg-none"
+            onClick={() => setShow(!show)}
+          >
+            <img
+              src={imageSchedule.src}
+              alt="Booking System"
+              className="booking-img bookingFloatingButton"
+              width="18px"
+              height="18px"
+            />
           </button>
         </Fragment>
-        : <>
-          {steps.step1.active &&
-            <FloatingWindow step={steps.step1} options={optionHairSize} show={show} setShow={setShow} checked={checked} setChecked={setChecked} nextStep={secondStep} />
-          }
-          {steps.step2.active &&
-            <FloatingWindow step={steps.step2} options={optionHairType} show={show} setShow={setShow} checked={checked} setChecked={setChecked} nextStep={thirdStep} previousStep={backToFirstStep} />
-          }
-          {steps.step3.active &&
-            <FloatingWindowServices steps={steps} setSteps={setSteps} step={steps.step3} show={show} setShow={setShow} checked={checked} setChecked={setChecked} nextStep={fourthStep} multiChecked={multiChecked} setMultiChecked={setMultiChecked} previousStep={backToSecondStep} />
-          }
-          {steps.step4.active &&
-            <FloatingWindow step={steps.step4} options={steps.step3.serviceType ? state.stylists.artDirector : state.stylists.stylist} show={show} setShow={setShow} checked={checked} setChecked={setChecked} nextStep={fifthStep} previousStep={backToThirdStep} />
-          }
-          {steps.step5.active &&
-            <FloatingWindowDate steps={steps} step={steps.step5} show={show} setShow={setShow} nextStep={sixthStep} startDate={startDate} setStartDate={setStartDate} previousStep={backToFourthStep} />
-          }
-          {steps.step6.active &&
-            <FloatingWindowAuth steps={steps} setSteps={setSteps} step={steps.step6} show={show} setShow={setShow} nextStep={seventhStep} previousStep={backToFifthStep} />
-          }
-          {steps.step7.active &&
-            <FloatingWindowOverview steps={steps} setSteps={setSteps} step={steps.step7} show={show} setShow={setShow} previousStep={backToDatePicker} payLater={payLater} nextStep={eighthStep} />
-          }
-          {(steps.step8.active || state.currentStep == 8) &&
-            <FloatingWindowPayment steps={steps} setSteps={setSteps} step={steps.step8} show={show} setShow={setShow} nextStep={() => { }} />
-          }
+      ) : (
+        <>
+          {steps.step1.active && (
+            <FloatingWindow
+              step={steps.step1}
+              options={optionHairSize}
+              show={show}
+              setShow={setShow}
+              checked={checked}
+              setChecked={setChecked}
+              nextStep={secondStep}
+            />
+          )}
+          {steps.step2.active && (
+            <FloatingWindow
+              step={steps.step2}
+              options={optionHairType}
+              show={show}
+              setShow={setShow}
+              checked={checked}
+              setChecked={setChecked}
+              nextStep={thirdStep}
+              previousStep={backToFirstStep}
+            />
+          )}
+          {steps.step3.active && (
+            <FloatingWindowServices
+              steps={steps}
+              setSteps={setSteps}
+              step={steps.step3}
+              show={show}
+              setShow={setShow}
+              checked={checked}
+              setChecked={setChecked}
+              nextStep={fourthStep}
+              multiChecked={multiChecked}
+              setMultiChecked={setMultiChecked}
+              previousStep={backToSecondStep}
+            />
+          )}
+          {steps.step4.active && (
+            <FloatingWindow
+              step={steps.step4}
+              options={
+                steps.step3.serviceType
+                  ? state.stylists.artDirector
+                  : state.stylists.stylist
+              }
+              show={show}
+              setShow={setShow}
+              checked={checked}
+              setChecked={setChecked}
+              nextStep={fifthStep}
+              previousStep={backToThirdStep}
+            />
+          )}
+          {steps.step5.active && (
+            <FloatingWindowDate
+              steps={steps}
+              step={steps.step5}
+              show={show}
+              setShow={setShow}
+              nextStep={sixthStep}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              previousStep={backToFourthStep}
+            />
+          )}
+          {steps.step6.active && (
+            <FloatingWindowAuth
+              steps={steps}
+              setSteps={setSteps}
+              step={steps.step6}
+              show={show}
+              setShow={setShow}
+              nextStep={seventhStep}
+              previousStep={backToFifthStep}
+            />
+          )}
+          {steps.step7.active && (
+            <FloatingWindowOverview
+              steps={steps}
+              setSteps={setSteps}
+              step={steps.step7}
+              show={show}
+              setShow={setShow}
+              previousStep={backToDatePicker}
+              payLater={payLater}
+              nextStep={eighthStep}
+            />
+          )}
+          {(steps.step8.active || state.currentStep == 8) && (
+            <FloatingWindowPayment
+              steps={steps}
+              setSteps={setSteps}
+              step={steps.step8}
+              show={show}
+              setShow={setShow}
+              nextStep={() => {}}
+            />
+          )}
         </>
-      }
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default BookingSystem
+export default BookingSystem;
